@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Minha página</title>
+        <style>
+            #tabela {
+                border: 1px solid black;
+            }
+
+            #tabela tr td, #tabela tr th {
+                border: 1px solid black;
+                padding: 0;
+                margin: 0;
+            }
+
+            .link {
+                color: grey;
+            }
+
+            .link:visited {
+                color: red;
+            }
+
+            .link:hover {
+                color: pink;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Meu título principal</h1>
+        <p>Conteúdo <strong>de</strong> paragrafo</p>
+        <a href="https://google.com" class="link">Google</a>
+
+        <table id="tabela">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Idade</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Júlio</td>
+                    <td>26</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div>
+            <ul>
+                <li>Primeiro</li>
+                <li>Segundo</li>
+                <li>Terceiro</li>
+            </ul>
+            <ol>
+                <li>Primeiro</li>
+                <li>Segundo</li>
+                <li>Terceiro</li>
+            </ol>
+        </div>
+        <form>
+            <label>Nome</label>
+            <input name="nome">
+        </form>
+    </body>
+</html>
