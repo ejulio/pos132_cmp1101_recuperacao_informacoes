@@ -83,6 +83,7 @@ def construir_indice_invertido(documentos):
             if token not in indice_invertido:
                 indice_invertido[token] = [i]
             else:
+                # note a diferença do índice invertido do exercício anterior
                 indice_invertido[token].append(i)
 
     return indice_invertido
@@ -99,22 +100,16 @@ def construir_indice_k_grams(indice_invertido, k=3):
                 indice_k_grams[k_gram] = {termo}
             else:
                 indice_k_grams[k_gram].add(termo)
-    
+
     return indice_k_grams
 
 
 def construir_matriz_tf_idf(indice_invertido, documentos):
     ids_termos = {}
     M = np.zeros((len(indice_invertido), len(documentos)))
-    for (i, termo) in enumerate(indice_invertido.keys()):
-        ids_termos[termo] = i
-        for j in indice_invertido[termo]:
-            M[i, j] += 1
-
-    df = np.sum(M > 0, axis=1)
-    idf = np.log(len(documentos) / df)
-    M_tf_idf = M * idf.reshape(-1, 1)
-    return (M_tf_idf, ids_termos)
+    # Exercício 1
+    # Seu código aqui
+    return (M, ids_termos)
 
 
 def obter_k_grams(termo, k=3):
@@ -180,15 +175,8 @@ def consultar(termos_consulta, M, ids_termos, documentos):
     Como seria essa rotina se usássemos set() do python como estrutura de dados ao invés de list()?
     Como seriam as operações OR e NOT?
     '''
-    q = np.zeros((M.shape[0], 1))
-    q[[ids_termos[t] for t in termos_consulta]] = 1
-    A = np.dot(q.T, M)
-    M_norm = np.sqrt(np.square(M))
-    B = np.dot(q.T, M_norm)
-    D = A / (B + 0.0000001)
-    D = D.reshape(-1)
-    for i in np.argsort(D)[::-1]:
-        yield documentos[i]
+    # Exercício 2
+    # Seu código aqui
 
 
 if __name__ == '__main__':
