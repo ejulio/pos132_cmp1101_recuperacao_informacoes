@@ -2,6 +2,8 @@ from argparse import ArgumentParser
 import json
 import re
 
+import numpy as np
+
 
 def parse_args():
     ap = ArgumentParser()
@@ -32,6 +34,7 @@ def main(args):
     documentos = list(ler_documentos(args.documentos))
     indice_invertido = construir_indice_invertido(documentos)
     indice_k_grams = construir_indice_k_grams(indice_invertido, k=3)
+    (M, ids_termos) = construir_matriz_tf_idf(indice_invertido, documentos)
     while True:
         print('=' * 80)
         print('=' * 80)
@@ -41,16 +44,16 @@ def main(args):
             print('Saindo...')
             break
 
-        termos = normalizar_tokens(consulta.split('AND'))
+        termos = normalizar_tokens(consulta.split())
         termos_ = aplicar_correcao_ortografica(termos, indice_invertido, indice_k_grams)
         if termos_ != termos:
             termos = termos_
-            print(f'Você quis dizer "{" AND ".join(termos)}"?')
+            print(f'Você quis dizer "{" ".join(termos)}"?')
         else:
             print(f'Resultados para {consulta}')
 
         print()
-        resultados = consultar(termos, indice_invertido, documentos)
+        resultados = consultar(termos, M, ids_termos, documentos)
         for (documento, i) in zip(resultados, range(args.n_resultados)):
             print(f'{i + 1}. {documento["titulo"]}')
             print(documento["url"])
@@ -79,7 +82,7 @@ def construir_indice_invertido(documentos):
         for token in tokens:
             if token not in indice_invertido:
                 indice_invertido[token] = [i]
-            elif indice_invertido[token][-1] != i:
+            else:
                 indice_invertido[token].append(i)
 
     return indice_invertido
@@ -98,6 +101,20 @@ def construir_indice_k_grams(indice_invertido, k=3):
                 indice_k_grams[k_gram].add(termo)
     
     return indice_k_grams
+
+
+def construir_matriz_tf_idf(indice_invertido, documentos):
+    ids_termos = {}
+    M = np.zeros((len(indice_invertido), len(documentos)))
+    for (i, termo) in enumerate(indice_invertido.keys()):
+        ids_termos[termo] = i
+        for j in indice_invertido[termo]:
+            M[i, j] += 1
+
+    df = np.sum(M > 0, axis=1)
+    idf = np.log(len(documentos) / df)
+    M_tf_idf = M * idf.reshape(-1, 1)
+    return (M_tf_idf, ids_termos)
 
 
 def obter_k_grams(termo, k=3):
@@ -157,40 +174,21 @@ def jaccard(k_grams, termos_candidados, k):
         yield (j, candidato)
 
 
-def consultar(termos_consulta, indice_invertido, documentos):
+def consultar(termos_consulta, M, ids_termos, documentos):
     '''
     Retorna todos os documentos que contém todos os termos de consulta.
     Como seria essa rotina se usássemos set() do python como estrutura de dados ao invés de list()?
     Como seriam as operações OR e NOT?
     '''
-    p1 = termos_consulta.pop(0)
-    resultados = indice_invertido[p1]
-    while termos_consulta:
-        p2 = termos_consulta.pop(0)
-        resultados = intersect(indice_invertido[p2], resultados)
-    
-    for i in resultados:
+    q = np.zeros((M.shape[0], 1))
+    q[[ids_termos[t] for t in termos_consulta]] = 1
+    A = np.dot(q.T, M)
+    M_norm = np.sqrt(np.square(M))
+    B = np.dot(q.T, M_norm)
+    D = A / (B + 0.0000001)
+    D = D.reshape(-1)
+    for i in np.argsort(D)[::-1]:
         yield documentos[i]
-
-
-def intersect(p1, p2):
-    '''
-    Implementar o algoritmo INTERSECT do Livro Introduction to Information Retrieval
-    '''
-    p1 = p1 + []
-    p2 = p2 + []
-    resposta = []
-    while p1 and p2:
-        if p1[0] == p2[0]:
-            resposta.append(p1[0])
-            p1.pop(0)
-            p2.pop(0)
-        elif p1[0] < p2[0]:
-            p1.pop(0)
-        else:
-            p2.pop(0)
-
-    return resposta
 
 
 if __name__ == '__main__':
